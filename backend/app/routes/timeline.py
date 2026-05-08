@@ -8,9 +8,14 @@ from app.schemas.timeline import TimelineCreate, TimelineUpdate, TimelineRespons
 
 router = APIRouter()
 
+@router.get("/", response_model=List[TimelineResponse])
+async def get_timeline(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    timeline = db.query(Timeline).offset(skip).limit(limit).order_by(Timeline.fecha.desc()).all()
+    return timeline
+
 @router.get("/case/{case_id}", response_model=List[TimelineResponse])
 async def get_timeline_by_case(case_id: UUID, db: Session = Depends(get_db)):
-    timeline = db.query(Timeline).filter(Timeline.caso_id == case_id).order_by(Timeline.fecha).all()
+    timeline = db.query(Timeline).filter(Timeline.caso_id == case_id).order_by(Timeline.fecha.desc()).all()
     return timeline
 
 @router.post("/", response_model=TimelineResponse, status_code=status.HTTP_201_CREATED)

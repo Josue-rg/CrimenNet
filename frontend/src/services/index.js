@@ -81,6 +81,10 @@ export const suspectService = {
 };
 
 export const evidenceService = {
+  getAll: async () => {
+    const response = await api.get('/evidence/');
+    return response.data;
+  },
   getByCase: async (caseId) => {
     const response = await api.get(`/evidence/case/${caseId}`);
     return response.data;
@@ -122,5 +126,27 @@ export const interrogationService = {
   },
   delete: async (id) => {
     await api.delete(`/interrogations/${id}`);
+  }
+};
+
+export const timelineService = {
+  getAll: async () => {
+    const response = await api.get('/timeline/');
+    return response.data;
+  },
+  getByCase: async (caseId) => {
+    const response = await api.get(`/timeline/case/${caseId}`);
+    return response.data;
+  },
+  create: async (data) => {
+    const response = await api.post('/timeline/', data);
+    return response.data;
+  },
+  update: async (id, data) => {
+    const response = await api.put(`/timeline/${id}`, data);
+    return response.data;
+  },
+  delete: async (id) => {
+    await api.delete(`/timeline/${id}`);
   }
 };

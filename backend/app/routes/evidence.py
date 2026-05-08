@@ -13,16 +13,16 @@ async def get_evidence(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     evidence = db.query(Evidence).offset(skip).limit(limit).all()
     return evidence
 
+@router.get("/case/{case_id}", response_model=List[EvidenceResponse])
+async def get_evidence_by_case(case_id: UUID, db: Session = Depends(get_db)):
+    evidence = db.query(Evidence).filter(Evidence.caso_id == case_id).all()
+    return evidence
+
 @router.get("/{evidence_id}", response_model=EvidenceResponse)
 async def get_evidence_by_id(evidence_id: UUID, db: Session = Depends(get_db)):
     evidence = db.query(Evidence).filter(Evidence.id == evidence_id).first()
     if not evidence:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidencia no encontrada")
-    return evidence
-
-@router.get("/case/{case_id}", response_model=List[EvidenceResponse])
-async def get_evidence_by_case(case_id: UUID, db: Session = Depends(get_db)):
-    evidence = db.query(Evidence).filter(Evidence.caso_id == case_id).all()
     return evidence
 
 @router.post("/", response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED)
