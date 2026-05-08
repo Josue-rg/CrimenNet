@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Clock, 
-  Calendar, 
-  MapPin, 
-  User, 
-  AlertTriangle, 
+import {
+  Clock,
+  Calendar,
+  MapPin,
+  User,
+  AlertTriangle,
   Search,
   Plus,
   Filter,
@@ -14,7 +14,7 @@ import {
   FileText,
   ArrowRight
 } from 'lucide-react';
-import { caseService } from '../services';
+import { caseService, timelineService } from '../services';
 
 const Timeline = () => {
   const [events, setEvents] = useState([]);
@@ -23,12 +23,19 @@ const Timeline = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
-    case_id: '',
+    caso_id: '',
     tipo: 'hallazgo',
     fecha: '',
     descripcion: '',
     ubicacion: ''
   });
+
+  // Sync caso_id with selectedCase
+  useEffect(() => {
+    if (selectedCase) {
+      setNewEvent(prev => ({ ...prev, caso_id: selectedCase }));
+    }
+  }, [selectedCase]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +44,7 @@ const Timeline = () => {
         setCases(casesData);
         if (casesData.length > 0) {
           setSelectedCase(casesData[0].id);
-          const timelineData = await caseService.getTimeline(casesData[0].id);
+          const timelineData = await timelineService.getByCase(casesData[0].id);
           setEvents(timelineData);
         }
       } catch (err) {
@@ -52,10 +59,40 @@ const Timeline = () => {
   const handleCaseChange = async (caseId) => {
     setSelectedCase(caseId);
     try {
-      const data = await caseService.getTimeline(caseId);
+      const data = await timelineService.getByCase(caseId);
       setEvents(data);
     } catch (err) {
       console.error("Error fetching timeline:", err);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Clean data: convert empty strings to null, keep valid values
+      const dataToSend = {
+        caso_id: newEvent.caso_id || null,
+        tipo: newEvent.tipo,
+        fecha: newEvent.fecha || null,
+        descripcion: newEvent.descripcion || null,
+        ubicacion: newEvent.ubicacion || null
+      };
+
+      await timelineService.create(dataToSend);
+      // Refresh timeline
+      const data = await timelineService.getByCase(selectedCase);
+      setEvents(data);
+      setIsAddModalOpen(false);
+      // Reset form
+      setNewEvent({
+        caso_id: selectedCase,
+        tipo: 'hallazgo',
+        fecha: '',
+        descripcion: '',
+        ubicacion: ''
+      });
+    } catch (err) {
+      console.error("Error creating event:", err);
     }
   };
 
@@ -89,7 +126,7 @@ const Timeline = () => {
           <h1 className="text-3xl font-bold text-white tracking-widest uppercase">Línea de Tiempo</h1>
           <p className="text-fbi-blue/60 text-xs mt-1 uppercase tracking-tighter">[ Cronología de Eventos del Caso ]</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsAddModalOpen(true)}
           className="flex items-center gap-2 bg-fbi-blue/10 hover:bg-fbi-blue/20 border border-fbi-blue/50 text-fbi-blue px-6 py-2.5 rounded-lg uppercase tracking-widest text-xs font-bold transition-all hover:shadow-neon-blue"
         >
@@ -128,7 +165,7 @@ const Timeline = () => {
         <div className="relative">
           {/* Vertical Line */}
           <div className="absolute left-8 top-0 bottom-0 w-[2px] bg-gradient-to-b from-fbi-red via-fbi-blue to-transparent opacity-30" />
-          
+
           <div className="space-y-8 pl-20">
             {sortedEvents.map((event, index) => (
               <motion.div
@@ -171,11 +208,11 @@ const Timeline = () => {
                           {event.tipo}
                         </div>
                       </div>
-                      
+
                       <h3 className="text-lg font-bold text-white uppercase tracking-wider mb-2">
                         {event.descripcion}
                       </h3>
-                      
+
                       {event.ubicacion && (
                         <div className="flex items-center gap-2 text-gray-400 text-xs mt-2">
                           <MapPin className="w-3 h-3" />
@@ -204,20 +241,20 @@ const Timeline = () => {
       {/* Add Event Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             onClick={() => setIsAddModalOpen(false)}
             className="absolute inset-0 bg-fbi-black/80 backdrop-blur-sm"
           />
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="w-full max-w-2xl glass-panel rounded-2xl border border-fbi-blue/20 shadow-neon-blue relative z-10 overflow-hidden"
           >
             <div className="scan-line opacity-10" />
-            
+
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-fbi-blue/5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-fbi-blue/10 rounded border border-fbi-blue/30 flex items-center justify-center">
@@ -235,13 +272,13 @@ const Timeline = () => {
               </button>
             </div>
 
-            <form className="p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 ml-1 font-bold">Caso</label>
                   <select
-                    value={newEvent.case_id}
-                    onChange={(e) => setNewEvent({...newEvent, case_id: e.target.value})}
+                    value={newEvent.caso_id}
+                    onChange={(e) => setNewEvent({ ...newEvent, caso_id: e.target.value })}
                     className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-blue/50 appearance-none cursor-pointer"
                   >
                     <option value="">Seleccione un caso</option>
@@ -256,14 +293,13 @@ const Timeline = () => {
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 ml-1 font-bold">Tipo de Evento</label>
                     <select
                       value={newEvent.tipo}
-                      onChange={(e) => setNewEvent({...newEvent, tipo: e.target.value})}
+                      onChange={(e) => setNewEvent({ ...newEvent, tipo: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-blue/50 appearance-none cursor-pointer"
                     >
                       <option value="crimen">CRIMEN</option>
                       <option value="hallazgo">HALLAZGO</option>
                       <option value="interrogatorio">INTERROGATORIO</option>
                       <option value="movimiento">MOVIMIENTO</option>
-                      <option value="otro">OTRO</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -271,7 +307,7 @@ const Timeline = () => {
                     <input
                       type="datetime-local"
                       value={newEvent.fecha}
-                      onChange={(e) => setNewEvent({...newEvent, fecha: e.target.value})}
+                      onChange={(e) => setNewEvent({ ...newEvent, fecha: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-blue/50"
                     />
                   </div>
@@ -282,7 +318,7 @@ const Timeline = () => {
                   <textarea
                     rows={3}
                     value={newEvent.descripcion}
-                    onChange={(e) => setNewEvent({...newEvent, descripcion: e.target.value})}
+                    onChange={(e) => setNewEvent({ ...newEvent, descripcion: e.target.value })}
                     className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-blue/50 resize-none"
                     placeholder="Describa detalladamente el evento..."
                   />
@@ -295,7 +331,7 @@ const Timeline = () => {
                     <input
                       type="text"
                       value={newEvent.ubicacion}
-                      onChange={(e) => setNewEvent({...newEvent, ubicacion: e.target.value})}
+                      onChange={(e) => setNewEvent({ ...newEvent, ubicacion: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-fbi-blue/50"
                       placeholder="Dirección o coordenadas"
                     />

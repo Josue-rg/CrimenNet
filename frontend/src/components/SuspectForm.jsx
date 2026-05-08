@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  ShieldAlert, 
-  Image as ImageIcon, 
-  FileText, 
-  Calendar, 
-  MapPin, 
+import {
+  Users,
+  ShieldAlert,
+  Image as ImageIcon,
+  FileText,
+  Calendar,
+  MapPin,
   X,
   CheckCircle,
   AlertTriangle,
@@ -69,10 +69,16 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
     setError('');
 
     try {
+      // Allow foto to be null if not provided
+      const dataToSubmit = {
+        ...formData,
+        foto: formData.foto || null
+      };
+
       if (initialData?.id) {
-        await suspectService.update(initialData.id, formData);
+        await suspectService.update(initialData.id, dataToSubmit);
       } else {
-        await suspectService.create(formData);
+        await suspectService.create(dataToSubmit);
       }
       onSuccess();
       onClose();
@@ -88,15 +94,15 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-fbi-black/80 backdrop-blur-sm"
           />
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -104,7 +110,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
           >
             {/* Scanline decoration */}
             <div className="scan-line opacity-10" />
-            
+
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-fbi-red/5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-fbi-red/10 rounded border border-fbi-red/30 flex items-center justify-center">
@@ -126,7 +132,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
               <div className="space-y-4">
                 {/* Photo Upload */}
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-gray-400 ml-1 font-bold">Fotografía del Sujeto</label>
+                  <label className="text-[10px] uppercase tracking-widest text-gray-400 ml-1 font-bold">Fotografía del Sujeto (Opcional)</label>
                   <div className="flex items-center gap-4">
                     <div className="w-32 h-40 bg-fbi-dark/50 border-2 border-dashed border-white/10 rounded-lg overflow-hidden relative group">
                       {photoPreview ? (
@@ -161,7 +167,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                   <input
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-red/50 transition-all"
                     placeholder="Nombre y Apellido"
                     required
@@ -174,7 +180,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                     <input
                       type="text"
                       value={formData.alias}
-                      onChange={(e) => setFormData({...formData, alias: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-red/50 transition-all"
                       placeholder="Apodos o sobrenombres"
                     />
@@ -184,7 +190,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                     <input
                       type="number"
                       value={formData.edad}
-                      onChange={(e) => setFormData({...formData, edad: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, edad: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-red/50 transition-all"
                       placeholder="25"
                       min="0"
@@ -198,7 +204,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 ml-1 font-bold">Nivel de Peligro</label>
                     <select
                       value={formData.nivel_peligro}
-                      onChange={(e) => setFormData({...formData, nivel_peligro: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, nivel_peligro: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-red/50 appearance-none cursor-pointer"
                     >
                       <option value="bajo">BAJO</option>
@@ -211,7 +217,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 ml-1 font-bold">Estado Actual</label>
                     <select
                       value={formData.estado}
-                      onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-red/50 appearance-none cursor-pointer"
                     >
                       <option value="buscado">BUSCADO</option>
@@ -230,7 +236,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                     <input
                       type="text"
                       value={formData.ultima_ubicacion}
-                      onChange={(e) => setFormData({...formData, ultima_ubicacion: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, ultima_ubicacion: e.target.value })}
                       className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-fbi-red/50"
                       placeholder="Ciudad, Barrio o Coordenadas"
                     />
@@ -242,7 +248,7 @@ const SuspectForm = ({ isOpen, onClose, onSuccess, initialData = null }) => {
                   <textarea
                     rows={4}
                     value={formData.descripcion}
-                    onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                     className="w-full bg-fbi-dark/50 border border-white/10 rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-fbi-red/50 resize-none italic"
                     placeholder="Describa el perfil psicológico, modus operandi, antecedentes penales..."
                   />
