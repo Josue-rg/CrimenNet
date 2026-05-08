@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: crimennet-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: crimennet-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: UPLOAD_DIR
+        value: ./uploads
+    disk:
+      name: uploads-data
+      mountPath: /app/uploads
+      sizeGB: 1
